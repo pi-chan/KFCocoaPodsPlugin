@@ -52,6 +52,7 @@
 
 @property (nonatomic, strong, readonly) NSAttributedString *homepage;
 
+@property (nonatomic, readonly) NSUInteger stargazersCount;
 
 - (void)parsePodspec;
 

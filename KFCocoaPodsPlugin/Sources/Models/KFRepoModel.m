@@ -45,6 +45,8 @@
 
 @property (nonatomic, strong, readwrite) NSAttributedString *homepage;
 
+@property (nonatomic, readwrite) NSUInteger stargazersCount;
+
 
 @end
 
@@ -118,6 +120,36 @@
             if (homepage != nil)
             {
                 self.homepage = [NSAttributedString hyperlinkFromString:homepage withURL:[NSURL URLWithString:homepage]];
+                self.stargazersCount = 0;
+                @try {
+                    NSString *repoName = nil;
+                    NSString* pattern = @"github.com/([^/]+)/([^/]+)";
+
+                    NSError* error = nil;
+                    NSRegularExpression* regex = [NSRegularExpression regularExpressionWithPattern:pattern options:NSRegularExpressionCaseInsensitive error:&error];
+
+                    if (error == nil){
+                        NSArray *matches = [regex matchesInString:homepage options:0 range:NSMakeRange(0, homepage.length)];
+                        for (NSTextCheckingResult *match in matches){
+                            repoName = [NSString stringWithFormat:@"%@/%@", [homepage substringWithRange:[match rangeAtIndex:1]], [homepage substringWithRange:[match rangeAtIndex:2]]];
+                            break;
+                        }
+                    }
+
+                    if (repoName != nil) {
+                        NSString *githubToken = @"YOUR_TOKEN";
+                        NSString *urlString = [NSString stringWithFormat:@"https://api.github.com/repos/%@?access_token=%@", repoName, githubToken];
+                        NSString *jsonString = [NSString stringWithContentsOfURL:url encoding:NSUTF8StringEncoding error:nil];
+                        NSData* jsonData = [jsonString dataUsingEncoding:NSUnicodeStringEncoding];
+                        NSDictionary* json = [NSJSONSerialization JSONObjectWithData:jsonData options: NSJSONReadingAllowFragments error:nil];
+                        NSString *value = [json valueForKey:@"stargazers_count"];
+                        if (value) {
+                            self.stargazersCount = [value intValue];
+                        }
+                    }
+                } @catch (...) {
+
+                }
             }
             
             
